@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Analayzer | AI</title>
+    <!-- Favicon -->
+    
+    <link rel="stylesheet" href="styles.css">    
+    <!-- Google Fonts: Poppins and Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+    <!-- Loading Screen 
+    <div id="loader">
+        <div class="spinner"></div>
+    </div>-->
+
+    <!-- Maintenance Mode Page -->
+    <div id="maintenance-page" style="display: none;">
+        <div class="maintenance-content">
+            <i class="fas fa-tools"></i>
+            <h1>Under Service</h1>
+            <p>We are currently undergoing some updates. Please check back soon!</p>
+        </div>
+    </div>
+
+    <div id="main-content">
+    <!-- Header & Navigation -->
+    <header>
+        
+         <img src="WebAnalayzer_logo.png" alt="WebAnalyzer Logo" class="logo">
+        <nav>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#about">About Us</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li><a href="#features">Features</a></li>
+            </ul>
+        </nav>
+        <button id="menu-btn" class="fas fa-bars"></button>
+    </header>
+
+    <main>
+        <!-- Home Section -->
+        <section id="home" class="home-section">
+            <div class="home-content">
+                <h1>Grow Your Business 📈</h1>
+                <p>An AI-powered Web Analyzer <span class="typing-text"></span></p>
+                <div class="buttons">
+                    <button class="btn" onclick="document.getElementById('analyzer').scrollIntoView({behavior: 'smooth'})">Analyze Now</button>
+                    <button class="btn btn-secondary" onclick="document.getElementById('about').scrollIntoView({behavior: 'smooth'})">Learn More</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="content-section">
+            <h2 class="section-title">Our AI Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+                    <h3>Performance Analysis</h3>
+                    <p>AI analyzes page load times, responsiveness, and overall performance metrics to identify bottlenecks.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-search"></i></div>
+                    <h3>SEO Optimization</h3>
+                    <p>Get insights on keywords, meta tags, headings, and content structure for better search rankings.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-eye"></i></div>
+                    <h3>UX Analysis</h3>
+                    <p>Detailed evaluation of user experience, navigation, accessibility, and design consistency.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-lightbulb"></i></div>
+                    <h3>Content Insights</h3>
+                    <p>AI reviews content quality, readability, keyword density, and engagement potential.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-bullseye"></i></div>
+                    <h3>Conversion Optimization</h3>
+                    <p>Actionable recommendations to improve conversion rates and customer engagement.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-report"></i></div>
+                    <h3>Detailed Reports</h3>
+                    <p>Generate comprehensive reports with visual insights and prioritized action items.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analyzer Tool Section -->
+        <section id="analyzer" class="content-section analyzer-section">
+            <h2 class="section-title">Analyze Your Website</h2>
+            <div class="analyzer-container">
+                <form id="analyzer-form" class="analyzer-form">
+                    <div class="form-group">
+                        <label for="website-url">Website URL</label>
+                        <input type="url" id="website-url" name="url" placeholder="https://yourwebsite.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Your Email</label>
+                        <input type="email" id="email" name="email" placeholder="your@email.com" required>
+                    </div>
+                    <div class="analysis-options">
+                        <label><input type="checkbox" name="analysis" value="performance" checked> Performance Analysis</label>
+                        <label><input type="checkbox" name="analysis" value="seo" checked> SEO Audit</label>
+                        <label><input type="checkbox" name="analysis" value="ux" checked> UX Evaluation</label>
+                        <label><input type="checkbox" name="analysis" value="content" checked> Content Analysis</label>
+                    </div>
+                    <button type="submit" class="btn btn-analyze">Run Analysis</button>
+                    <div id="analyzer-status"></div>
+                </form>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="about-section content-section">
+            <h2 class="section-title">About Us</h2>
+            <div class="about-content">
+                <p>
+                    Here we provide you with a comprehensive analysis of your website's performance, user experience, and SEO. Our AI-powered tools will help you identify areas for improvement and optimize your site for better results. Whether you're a business owner, developer, or marketer, our platform is designed to give you actionable insights to enhance your online presence.
+                </p>
+            </div>
+        </section>
+
+       
+
+        
+
+        <!-- Contact Section -->
+        <section id="contact" class="content-section">
+            <h2 class="section-title">Get In Touch</h2>
+            <div class="contact-container">
+                <div class="contact-info">
+                    <p> Feel free to reach out us through Email!</p>
+                    <a href="mailto:harshavardhankatta5@outlook.com" class="btn"><i class="fas fa-envelope"></i> Email Us</a>
+                    <div class="social-links">
+                        <a href="https://youtube.com" target="_blank" aria-label="youtube"><i class="fab fa-youtube"></i></a>
+                        <a href="https://www.linkedin.com/in/katta-harshavardhan" target="_blank" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                        <a href="https://www.instagram.com/harsha_vardhankatta" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <form id="contact-form" class="contact-form">
+                    <input type="text" name="name" placeholder="Your Name" required>
+                    <input type="email" name="email" placeholder="Your Email" required>
+                    <textarea name="message" placeholder="Your Message" rows="5" required></textarea>
+                    <button type="submit" class="btn">Send Message</button>
+                    <div id="form-status"></div>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>Copyright &copy; 2025 WebAnalyzer | AI. All Rights Reserved.</p>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <a href="#" id="back-to-top" class="fas fa-arrow-up"></a>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

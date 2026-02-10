@@ -234,8 +234,10 @@ def generate_pdf_report(seo, performance, user_email):
     try:
         print("Generating PDF report...")
         
-        # Create temporary file
-        pdf_path = os.path.join(REPORTS_DIR, f"report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf")
+        # Sanitize email for filename
+        sanitized_email = ''.join([c if c.isalnum() else '_' for c in user_email])
+        # Create temporary file (include email to help lookup)
+        pdf_path = os.path.join(REPORTS_DIR, f"report_{sanitized_email}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf")
         
         # Create PDF with better margins
         doc = SimpleDocTemplate(pdf_path, pagesize=letter,
@@ -512,6 +514,14 @@ def generate_pdf_report(seo, performance, user_email):
         print(f"PDF Generation Error: {str(e)}")
         raise Exception(f"PDF generation failed: {str(e)}")
 
+
+def generate_and_send_pdf(seo, performance, user_email, text_report):
+    try:
+        pdf_path = generate_pdf_report(seo, performance, user_email)
+        send_email(user_email, text_report, pdf_path)
+    except Exception as e:
+        print(f"Background PDF generation/send failed: {str(e)}")
+
 # 6. CHART GENERATION FUNCTIONS
 def create_seo_chart(seo):
     try:
@@ -648,17 +658,16 @@ def analyze():
         print("Generating text report...")
         text_report = generate_report(seo_result, performance_score)
         
-        print("Generating PDF report with charts...")
-        pdf_path = generate_pdf_report(seo_result, performance_score, email)
+        print("Queueing quick text email (no attachment) to send immediately in background...")
+        # Send a quick text-only email immediately so user receives something fast
+        executor.submit(send_email, email, text_report, None)
 
-        print("Queueing email send task...")
-        # Send email in background so the API responds quickly
-        future = executor.submit(send_email, email, text_report, pdf_path)
-        print(f"Email send task submitted: {future}")
+        print("Queueing PDF generation and attachment send in background...")
+        # Generate PDF and send as a follow-up email in background
+        executor.submit(generate_and_send_pdf, seo_result, performance_score, email, text_report)
 
-        print("=== Request completed successfully ===")
-        # Return immediately; email will be sent in background. The background task logs success/failure.
-        return jsonify({"message": "Report generated. PDF created and email is being sent in the background. You should receive it shortly if SMTP is available."})
+        print("=== Request accepted and background tasks queued ===")
+        return jsonify({"message": "Analysis started. A quick summary email will arrive shortly; full PDF will follow when ready."})
     except Exception as e:
         error_msg = str(e)
         print(f"ERROR: {error_msg}")
@@ -673,6 +682,24 @@ def serve_index():
 @app.route('/<path:filename>')
 def serve_static(filename):
     return send_from_directory(FRONTEND_DIR, filename)
+
+
+@app.route('/download-latest')
+def download_latest():
+    email = request.args.get('email')
+    if not email:
+        return jsonify({"error": "email query parameter is required"}), 400
+
+    sanitized_email = ''.join([c if c.isalnum() else '_' for c in email])
+    try:
+        files = [f for f in os.listdir(REPORTS_DIR) if sanitized_email in f and f.lower().endswith('.pdf')]
+        if not files:
+            return jsonify({"error": "No report found for this email yet"}), 404
+        latest = max(files, key=lambda f: os.path.getmtime(os.path.join(REPORTS_DIR, f)))
+        return send_from_directory(REPORTS_DIR, latest, as_attachment=True)
+    except Exception as e:
+        print(f"Download latest error: {str(e)}")
+        return jsonify({"error": "Failed to retrieve report"}), 500
 
 
 # RUN SERVER

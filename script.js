@@ -134,6 +134,9 @@ contactForm.addEventListener('submit', async (e) => {
 // Analyzer Form Submission
 const analyzerForm = document.getElementById('analyzer-form');
 const analyzerStatus = document.getElementById('analyzer-status');
+// Timeouts (ms) - increased to allow longer PDF generation/download
+const ANALYZE_TIMEOUT_MS = 300000; // 5 minutes
+const MESSAGE_PERSIST_MS = 300000; // 5 minutes
 
 analyzerForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -162,7 +165,7 @@ analyzerForm.addEventListener('submit', async (e) => {
 
     // Create abort controller for timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), ANALYZE_TIMEOUT_MS); // 5 minute timeout
 
     // Call backend API
     try {
@@ -200,12 +203,35 @@ analyzerForm.addEventListener('submit', async (e) => {
                     <p style="color: #155724; margin: 0; font-size: 14px;">
                         A detailed PDF report with recommendations has been sent to <strong>${email}</strong>
                     </p>
+                    <div style="margin-top:10px;">
+                        <button id="download-report-btn" class="btn" style="background:#1a73e8;color:#fff;border:none;padding:8px 12px;border-radius:4px;cursor:pointer;">Download Report (if ready)</button>
+                        <span id="download-status" style="margin-left:10px;color:#333;font-size:13px;"></span>
+                    </div>
                 </div>
             `;
             console.log('Setting HTML:', successHTML);
             analyzerStatus.innerHTML = successHTML;
             analyzerStatus.style.display = 'block';
             analyzerStatus.style.opacity = '1';
+            // Hook up download button
+            const dlBtn = document.getElementById('download-report-btn');
+            const dlStatus = document.getElementById('download-status');
+            if (dlBtn) {
+                dlBtn.addEventListener('click', async () => {
+                    dlStatus.textContent = 'Checking for report...';
+                    try {
+                        await downloadLatest(email, dlStatus);
+                    } catch (err) {
+                        dlStatus.textContent = 'Error checking report';
+                    }
+                });
+            }
+
+            // Start polling automatically to download when ready
+            if (dlStatus) {
+                dlStatus.textContent = 'Waiting for PDF... Auto-download enabled.';
+                startPollingForReport(email, dlStatus, dlBtn);
+            }
             console.log('Success message displayed');
             
             // Scroll to message
@@ -213,11 +239,11 @@ analyzerForm.addEventListener('submit', async (e) => {
                 analyzerStatus.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 100);
             
-            // Keep message visible for 30 seconds before clearing the form
+            // Keep message visible for MESSAGE_PERSIST_MS before clearing the form
             setTimeout(() => {
                 analyzerForm.reset();
                 // Don't hide the message - keep it visible
-            }, 30000);
+            }, MESSAGE_PERSIST_MS);
         } else {
             console.log('Error response from backend');
             analyzerStatus.innerHTML = `
@@ -250,6 +276,97 @@ analyzerForm.addEventListener('submit', async (e) => {
 
     console.log('Analyzer Data:', { url, email, selectedAnalysis });                                                                                                                                              
 });
+
+// Download latest PDF for an email
+async function downloadLatest(email, statusElement) {
+    const endpoint = `http://127.0.0.1:5000/download-latest?email=${encodeURIComponent(email)}`;
+    try {
+        const resp = await fetch(endpoint);
+        if (!resp.ok) {
+            if (resp.status === 404) {
+                statusElement.textContent = 'Report not ready yet. Please try again in a moment.';
+            } else {
+                statusElement.textContent = 'Failed to fetch report.';
+            }
+            return;
+        }
+
+        const blob = await resp.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        // Try to extract filename from headers
+        const disposition = resp.headers.get('Content-Disposition');
+        let filename = 'webanalyzer_report.pdf';
+        if (disposition && disposition.indexOf('filename=') !== -1) {
+            filename = disposition.split('filename=')[1].replace(/"/g, '');
+        }
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        statusElement.textContent = 'Download started.';
+    } catch (err) {
+        console.error('Download error:', err);
+        statusElement.textContent = 'Error downloading report.';
+    }
+}
+
+// Poll backend for the report and auto-download when ready
+function startPollingForReport(email, statusElement, buttonEl) {
+    const pollInterval = 5000; // 5s
+    const timeout = ANALYZE_TIMEOUT_MS || 300000; // fallback 5min
+    let elapsed = 0;
+    if (buttonEl) buttonEl.disabled = true;
+
+    const poll = async () => {
+        try {
+            const resp = await fetch(`http://127.0.0.1:5000/download-latest?email=${encodeURIComponent(email)}`);
+            if (resp.ok) {
+                // File ready — trigger download
+                statusElement.textContent = 'Report ready — downloading now.';
+                const blob = await resp.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const disposition = resp.headers.get('Content-Disposition');
+                let filename = 'webanalyzer_report.pdf';
+                if (disposition && disposition.indexOf('filename=') !== -1) {
+                    filename = disposition.split('filename=')[1].replace(/"/g, '');
+                }
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+                statusElement.textContent = 'Download started.';
+                if (buttonEl) buttonEl.disabled = false;
+                clearInterval(intervalId);
+            } else {
+                if (resp.status === 404) {
+                    statusElement.textContent = `Report not ready yet... (${Math.floor(elapsed/1000)}s)`;
+                } else {
+                    statusElement.textContent = 'Error checking report status.';
+                }
+            }
+        } catch (err) {
+            console.error('Poll error:', err);
+            statusElement.textContent = 'Error contacting server.';
+        }
+
+        elapsed += pollInterval;
+        if (elapsed >= timeout) {
+            statusElement.textContent = 'Timed out waiting for PDF. Try manual download later.';
+            if (buttonEl) buttonEl.disabled = false;
+            clearInterval(intervalId);
+        }
+    };
+
+    // Start polling immediately then every pollInterval
+    poll();
+    const intervalId = setInterval(poll, pollInterval);
+}
 
 // Lock/Prevent Smooth Scroll Behavior on Pre-filled Form Fields
 document.querySelectorAll('input, textarea').forEach(field => {

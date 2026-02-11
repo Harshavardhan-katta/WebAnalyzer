@@ -173,7 +173,7 @@ analyzerForm.addEventListener('submit', async (e) => {
         console.log('URL:', url);
         console.log('Email:', email);
         
-        const response = await fetch('http://127.0.0.1:5000/analyze', {
+        const response = await fetch('https://webanalyzer-production.up.railway.app/analyze', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -322,7 +322,7 @@ function startPollingForReport(email, statusElement, buttonEl) {
 
     const poll = async () => {
         try {
-            const resp = await fetch(`http://127.0.0.1:5000/download-latest?email=${encodeURIComponent(email)}`);
+            const resp = await fetch(`https://webanalyzer-production.up.railway.app/download-latest?email=${encodeURIComponent(email)}`);
             if (resp.ok) {
                 // File ready — trigger download
                 statusElement.textContent = 'Report ready — downloading now.';

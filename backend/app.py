@@ -24,11 +24,31 @@ from datetime import datetime
 # Use non-interactive backend for matplotlib
 matplotlib.use('Agg')
 
-# Get the parent directory (project root)
-FRONTEND_DIR = os.path.join(os.path.dirname(__file__), '..')
+print("="*50)
+print("WEBANALYZER BACKEND STARTING UP")
+print("="*50)
 
-app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path='')
-CORS(app)
+# Get the parent directory (project root) - handle both local and Railway
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+FRONTEND_DIR = os.path.join(APP_DIR, '..')
+
+# Ensure frontend dir exists and use absolute path
+if not os.path.exists(FRONTEND_DIR):
+    FRONTEND_DIR = APP_DIR  # Fallback to app directory
+else:
+    FRONTEND_DIR = os.path.abspath(FRONTEND_DIR)
+
+print(f"APP_DIR: {APP_DIR}")
+print(f"FRONTEND_DIR: {FRONTEND_DIR}")
+print(f"Static files exist: {os.path.exists(os.path.join(FRONTEND_DIR, 'index.html'))}")
+
+try:
+    app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path='')
+    CORS(app)
+    print("✓ Flask app initialized successfully")
+except Exception as e:
+    print(f"✗ Error initializing Flask app: {e}")
+    raise
 
 # Executor for background tasks (email sending)
 executor = ThreadPoolExecutor(max_workers=2)
@@ -36,8 +56,16 @@ executor = ThreadPoolExecutor(max_workers=2)
 REPORTS_DIR = os.path.join(os.path.dirname(__file__), 'reports')
 if not os.path.exists(REPORTS_DIR):
     os.makedirs(REPORTS_DIR)
+    print(f"✓ Created reports directory: {REPORTS_DIR}")
+else:
+    print(f"✓ Reports directory exists: {REPORTS_DIR}")
 
-LOGO_PATH = os.path.join(os.path.dirname(__file__), '..', 'WebAnalayzer_logo.png')
+LOGO_PATH = os.path.abspath(os.path.join(APP_DIR, '..', 'WebAnalayzer_logo.png'))
+print(f"LOGO_PATH: {LOGO_PATH}, exists: {os.path.exists(LOGO_PATH)}")
+print("="*50)
+
+LOGO_PATH = os.path.abspath(LOGO_PATH)
+print(f"LOGO_PATH: {LOGO_PATH}, exists: {os.path.exists(LOGO_PATH)}")
 
 # 1. SEO ANALYSIS FUNCTION
 def seo_analysis(url):
@@ -603,6 +631,12 @@ def create_performance_chart(performance):
     except Exception as e:
         print(f"Performance Chart Error: {str(e)}")
         return None
+
+# HEALTH CHECK
+@app.route("/health", methods=["GET"])
+def health():
+    """Health check endpoint for Railway"""
+    return jsonify({"status": "ok", "message": "WebAnalyzer backend is running"})
 
 @app.route("/test-analyze", methods=["POST"])
 def test_analyze():

@@ -1,4 +1,11 @@
 
+// API Configuration - Works for both local and internet deployment
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://127.0.0.1:5000'  // Local development
+    : 'https://webanalyzer-production.up.railway.app';  // Production
+
+console.log('API_BASE_URL:', API_BASE_URL);
+
 // Typing Animation
 
 const textSequences = [
@@ -173,7 +180,7 @@ analyzerForm.addEventListener('submit', async (e) => {
         console.log('URL:', url);
         console.log('Email:', email);
         
-        const response = await fetch('https://webanalyzer-production.up.railway.app/analyze', {
+        const response = await fetch(`${API_BASE_URL}/analyze`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -279,7 +286,7 @@ analyzerForm.addEventListener('submit', async (e) => {
 
 // Download latest PDF for an email
 async function downloadLatest(email, statusElement) {
-    const endpoint = `http://127.0.0.1:5000/download-latest?email=${encodeURIComponent(email)}`;
+    const endpoint = `${API_BASE_URL}/download-latest?email=${encodeURIComponent(email)}`;
     try {
         const resp = await fetch(endpoint);
         if (!resp.ok) {
@@ -322,7 +329,7 @@ function startPollingForReport(email, statusElement, buttonEl) {
 
     const poll = async () => {
         try {
-            const resp = await fetch(`https://webanalyzer-production.up.railway.app/download-latest?email=${encodeURIComponent(email)}`);
+            const resp = await fetch(`${API_BASE_URL}/download-latest?email=${encodeURIComponent(email)}`);
             if (resp.ok) {
                 // File ready — trigger download
                 statusElement.textContent = 'Report ready — downloading now.';

@@ -69,17 +69,6 @@ LOGO_PATH = os.path.abspath(os.path.join(APP_DIR, '..', 'WebAnalayzer_logo.png')
 print(f"LOGO_PATH: {LOGO_PATH}, exists: {os.path.exists(LOGO_PATH)}")
 print("="*50)
 
-# ==== DEBUG ENDPOINTS ====
-@app.route("/", methods=["GET"])
-def root():
-    return jsonify({"message": "WebAnalyzer API is running", "status": "ok"})
-
-@app.route("/api/health", methods=["GET"])
-def api_health():
-    return jsonify({"status": "ok", "service": "WebAnalyzer"})
-
-# ========================
-
 # 1. SEO ANALYSIS FUNCTION
 def seo_analysis(url):
     try:
@@ -722,9 +711,12 @@ def analyze():
 
 
 # SERVE FRONTEND
-@app.route('/')
+@app.route('/', methods=["GET"])
 def serve_index():
-    return send_from_directory(FRONTEND_DIR, 'index.html')
+    try:
+        return send_from_directory(FRONTEND_DIR, 'index.html')
+    except:
+        return jsonify({"message": "WebAnalyzer API is running", "status": "ok"})
 
 @app.route('/<path:filename>')
 def serve_static(filename):

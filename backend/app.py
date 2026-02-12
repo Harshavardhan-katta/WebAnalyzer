@@ -44,7 +44,12 @@ print(f"Static files exist: {os.path.exists(os.path.join(FRONTEND_DIR, 'index.ht
 
 try:
     app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path='')
-    CORS(app)
+    # Configure CORS explicitly
+    CORS(app, 
+         origins="*",
+         allow_headers=["Content-Type", "Authorization"],
+         methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"],
+         supports_credentials=False)
     print("✓ Flask app initialized successfully")
 except Exception as e:
     print(f"✗ Error initializing Flask app: {e}")
@@ -64,8 +69,16 @@ LOGO_PATH = os.path.abspath(os.path.join(APP_DIR, '..', 'WebAnalayzer_logo.png')
 print(f"LOGO_PATH: {LOGO_PATH}, exists: {os.path.exists(LOGO_PATH)}")
 print("="*50)
 
-LOGO_PATH = os.path.abspath(LOGO_PATH)
-print(f"LOGO_PATH: {LOGO_PATH}, exists: {os.path.exists(LOGO_PATH)}")
+# ==== DEBUG ENDPOINTS ====
+@app.route("/", methods=["GET"])
+def root():
+    return jsonify({"message": "WebAnalyzer API is running", "status": "ok"})
+
+@app.route("/api/health", methods=["GET"])
+def api_health():
+    return jsonify({"status": "ok", "service": "WebAnalyzer"})
+
+# ========================
 
 # 1. SEO ANALYSIS FUNCTION
 def seo_analysis(url):

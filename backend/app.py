@@ -738,5 +738,17 @@ def download_latest():
 
 # RUN SERVER
 if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    try:
+        port = int(os.environ.get('PORT', 5000))
+        print(f"\n{'='*50}")
+        print(f"Starting Flask app on port {port}")
+        print(f"{'='*50}\n")
+        app.run(host='0.0.0.0', port=port, debug=False, threaded=True)
+    except Exception as e:
+        print(f"FATAL ERROR: {e}")
+        raise
+
+# For gunicorn
+if __name__ != "__main__":
+    print("✓ App loaded for gunicorn")
+
